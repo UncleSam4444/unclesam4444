@@ -1,13 +1,37 @@
-function filterData() {
-  event.preventDefault();
-  var startdate = document.getElementById("startdate").value;
-  var enddate = document.getElementById("enddate").value;
-  console.log("Starting date: " + startdate);
-  console.log(Ending date: " + enddate); 
-  fetch("https://compute.samford.edu/zohauth/clients/data"); 
-}
-
-// URL to fetch data from
+function filterData(event) {
+    event.preventDefault();
+    
+    const startdate = document.getElementById("startdate").value;
+    const enddate = document.getElementById("enddate").value;
+  
+    // Log the dates
+    console.log(`Starting date: ${startdate}`);
+    console.log(`Ending date: ${enddate}`);
+  
+    // Validate dates
+    if (!startdate || !enddate) {
+      console.error("Both start date and end date are required.");
+      return;
+    }
+  
+    // Fetch data
+    fetch("https://compute.samford.edu/zohauth/clients/data")
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok: " + response.statusText);
+        }
+        return response.json();
+      })
+      .then(data => {
+        console.log("Fetched data:", data);
+        // Here, you can filter the data based on the dates if needed
+      })
+      .catch(error => {
+        console.error("There was a problem with the fetch operation:", error);
+      });
+  }
+  
+// Fetch data from the given URL
 const dataUrl = 'https://compute.samford.edu/zohauth/clients/datajson';
 
 // Function to fetch and populate the table
