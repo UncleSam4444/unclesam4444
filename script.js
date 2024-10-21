@@ -7,48 +7,44 @@ function filterData() {
   fetch("https://compute.samford.edu/zohauth/clients/data"); 
 }
 
-async function fetchData() {
-  const loader = document.getElementById('loader');
-  const tableBody = document.querySelector('#data-table tbody');
-  loader.style.display = 'block'; // Show the loader
-
+async function fetchAndPopulateTable() {
   try {
-      const response = await fetch('https://compute.samford.edu/zohauth/clients/datajson');
-      if (!response.ok) {
-          throw new Error('Network response was not ok ' + response.statusText);
-      }
+    const response = await fetch(dataUrl);
+    const data = await response.json();
 
-      const data = await response.json();
+    const tableBody = document.getElementById('pitchTableBody');
+    tableBody.innerHTML = '';  // Clear existing rows
 
-      // Clear the table body
-      tableBody.innerHTML = '';
-
-      // Check if data is an array and has elements
-      if (Array.isArray(data) && data.length > 0) {
-          data.forEach(item => {
-              const row = document.createElement('tr');
-              row.innerHTML = `
-                  <td><a href="details.html?id=${item.id}">Pitch ${item.id}</a></td>
-                  <td>${item.speed !== undefined ? item.speed : '--'}</td>
-                  <td>${item.result !== undefined ? item.result : '--'}</td>
-                  <td>${item.datetime !== undefined ? item.datetime : '--'}</td>
-              `;
-              tableBody.appendChild(row);
-          });
-      } else {
-          const row = document.createElement('tr');
-          row.innerHTML = `<td colspan="4">No data available</td>`;
-          tableBody.appendChild(row);
-      }
-  } catch (error) {
-      console.error('Error fetching data:', error);
+    data.forEach(item => {
       const row = document.createElement('tr');
-      row.innerHTML = `<td colspan="4">Error fetching data: ${error.message}</td>`;
+
+      // Create ID cell with hyperlink
+      const idCell = document.createElement('td');
+      const link = document.createElement('a');
+      link.href = 'details.html';  // Link to a details page
+      link.textContent = `Pitch ${item.id}`;
+      idCell.appendChild(link);
+      row.appendChild(idCell);
+
+      // Create Speed cell
+      const speedCell = document.createElement('td');
+      speedCell.textContent = item.speed;
+      row.appendChild(speedCell);
+
+      // Create Result cell
+      const resultCell = document.createElement('td');
+      resultCell.textContent = item.result || '--';  // Display '--' if result is empty
+      row.appendChild(resultCell);
+
+      // Create Datetime cell
+      const datetimeCell = document.createElement('td');
+      datetimeCell.textContent = item.datetime || '--';  // Display '--' if datetime is empty
+      row.appendChild(datetimeCell);
+
       tableBody.appendChild(row);
-  } finally {
-      loader.style.display = 'none'; // Hide the loader
+    });
+  } catch (error) {
+    console.error('Error fetching data:', error);
   }
 }
-
-// Fetch data when the page loads
 window.onload = fetchData;
