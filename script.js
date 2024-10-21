@@ -7,6 +7,10 @@ function filterData() {
   fetch("https://compute.samford.edu/zohauth/clients/data"); 
 }
 
+// URL to fetch data from
+const dataUrl = 'https://compute.samford.edu/zohauth/clients/datajson';
+
+// Function to fetch and populate the table
 async function fetchAndPopulateTable() {
   try {
     const response = await fetch(dataUrl);
@@ -47,4 +51,6 @@ async function fetchAndPopulateTable() {
     console.error('Error fetching data:', error);
   }
 }
-window.onload = fetchData;
+
+// Call the function to populate the table on page load
+fetchAndPopulateTable();
