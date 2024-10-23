@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pitch Stats</title>
+    <style>
+        .blue {
+            color: #0C2340; 
+        }
+        .red {
+            color: #BD1F2D;
+        }
+        th {
+            border-bottom: 1px solid gray;
+            font-weight: bold;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+        th.sorted-asc::after {
+            content: " 🔼"; /* Ascending sort indicator */
+        }
+        th.sorted-desc::after {
+            content: " 🔽"; /* Descending sort indicator */
+        }
+        a {
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        h1 { 
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .loading {
+            font-size: 20px;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="red">Trackman Pitch Stats Viewer</h1>
+    <form onsubmit="filterData(event);">
+        <label>Starting Date</label>
+        <input type="date" id="startdate">
+        <label>End Date</label>
+        <input type="date" id="enddate">
+        <button>Filter</button>
+    </form>
+    <table id="data-table">
+        <thead>
+            <tr> 
+                <th onclick="sortTable('id')">ID</th>
+                <th onclick="sortTable('speed')">Speed</th>
+                <th onclick="sortTable('result')">Result</th>
+                <th onclick="sortTable('datetime')">Datetime</th>
+            </tr>
+        </thead>
+        <tbody id="pitchTableBody"></tbody>
+    </table>
+    
+    <script>
+        const dataUrl = 'https://compute.samford.edu/zohauth/clients/datajson';
+        let currentSortField = '';
+        let currentSortOrder = 'asc';
+
+        async function fetchAndPopulateTable() {
+            try {
+                const response = await fetch(dataUrl);
+                const data = await response.json();
+
+                const tableBody = document.getElementById('pitchTableBody');
+                tableBody.innerHTML = '';  // Clear existing rows
+
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+
+                    const idCell = document.createElement('td');
+                    const link = document.createElement('a');
+                    link.href = 'details.html';  // Link to a details page
+                    link.textContent = `Pitch ${item.id}`;
+                    idCell.appendChild(link);
+                    row.appendChild(idCell);
+
+                    const speedCell = document.createElement('td');
+                    speedCell.textContent = item.speed;
+                    row.appendChild(speedCell);
+
+                    const resultCell = document.createElement('td');
+                    resultCell.textContent = item.result || '--';  // Display '--' if result is empty
+                    row.appendChild(resultCell);
+
+                    const datetimeCell = document.createElement('td');
+                    datetimeCell.textContent = item.datetime || '--';  // Display '--' if datetime is empty
+                    row.appendChild(datetimeCell);
+
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+
+        function filterData(event) {
+            event.preventDefault();
+            
+            const startdate = document.getElementById("startdate").value;
+            const enddate = document.getElementById("enddate").value;
+
+            if (!startdate || !enddate) {
+                console.error("Both start date and end date are required.");
+                return;
+            }
+
+            // Here, implement the data fetching and filtering based on the date range
+            fetchAndPopulateTable(); // Call this or your filtering function
+        }
+
+        function sortTable(field) {
+            const rows = Array.from(document.querySelectorAll('#pitchTableBody tr'));
+            const isAsc = currentSortField === field && currentSortOrder === 'asc';
+            currentSortField = field;
+            currentSortOrder = isAsc ? 'desc' : 'asc';
+
+            rows.sort((a, b) => {
+                const aText = a.cells[getColumnIndex(field)].textContent;
+                const bText = b.cells[getColumnIndex(field)].textContent;
+
+                return isAsc 
+                    ? aText.localeCompare(bText) 
+                    : bText.localeCompare(aText);
+            });
+
+            // Clear and append sorted rows
+            const tableBody = document.getElementById('pitchTableBody');
+            tableBody.innerHTML = '';
+            rows.forEach(row => tableBody.appendChild(row));
+
+            // Highlight the sorted column
+            updateSortIndicators();
+        }
+
+        function getColumnIndex(field) {
+            switch (field) {
+                case 'id': return 0;
+                case 'speed': return 1;
+                case 'result': return 2;
+                case 'datetime': return 3;
+                default: return 0;
+            }
+        }
+
+        function updateSortIndicators() {
+            const headers = document.querySelectorAll('th');
+            headers.forEach(header => {
+                header.classList.remove('sorted-asc', 'sorted-desc');
+                if (header.textContent.toLowerCase() === currentSortField) {
+                    header.classList.add(currentSortOrder === 'asc' ? 'sorted-asc' : 'sorted-desc');
+                }
+            });
+        }
+
+        fetchAndPopulateTable(); // Initial fetch
+    </script>
+</body>
+</html>
